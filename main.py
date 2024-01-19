@@ -81,14 +81,6 @@ async def update_training(input_data: UpdateTrainingInput):
             }
     ]
 
-    # Update the ImageSets part of the JSON with the third value in the input list
-    data["ImageSets"][1]["rules"] = [
-        {
-            "type": "PixelValueAreaFraction",
-            "values": [1],
-            "more_than": float(input[2])/100
-        }
-    ]
 
     with open(CONFIG_FILE, "w") as file:
         json.dump(data, file)
@@ -96,7 +88,6 @@ async def update_training(input_data: UpdateTrainingInput):
     return {"status": "success"}
 
 # Code block for updating
-
 
 @app.post("/update_coord.js")
 async def update_coordinates(coords: Input):
