@@ -30,6 +30,13 @@ from deleteFolder import delete_all_folders
 class Input(BaseModel):
     input: list
 
+class UpdateTrainingInput(BaseModel):
+    training_fraction: int
+    validation_fraction: int
+    pixel_value_area_fraction: float
+
+class UpdateCoordinatesInput(BaseModel):
+    coordinates: list  # Define the structure of the coordinates as per your requirement
 
 # Import and create instance of the FastAPI framework
 app = FastAPI()
@@ -54,10 +61,7 @@ CONFIG_FILE = os.path.join(
 
 
 @app.post("/update_training")
-async def update_training(input: list):
-    if len(input) != 3:
-        return {"status": "error", "message": "input must have exactly 3 elements"}
-
+async def update_training(input_data: UpdateTrainingInput):
     with open(CONFIG_FILE, "r") as file:
         data = json.load(file)
 
@@ -66,17 +70,17 @@ async def update_training(input: list):
         data["ProjectArguments"] = {}
 
     # Updates training and validation with the first variables in the input list
-    data["ProjectArguments"]["training_fraction"] = int(input[0])
-    data["ProjectArguments"]["validation_fraction"] = int(input[1])
-
-    # Update the ImageSets part of the JSON with the third value in the input list
+    data["ProjectArguments"]["training_fraction"] = input_data.training_fraction
+    data["ProjectArguments"]["validation_fraction"] = input_data.validation_fraction
     data["ImageSets"][1]["rules"] = [
         {
+
             "type": "PixelValueAreaFraction",
             "values": [1],
-            "more_than": float(input[2])/100
-        }
+            "more_than": input_data.pixel_value_area_fraction / 100
+            }
     ]
+
 
     with open(CONFIG_FILE, "w") as file:
         json.dump(data, file)
@@ -84,7 +88,6 @@ async def update_training(input: list):
     return {"status": "success"}
 
 # Code block for updating
-
 
 @app.post("/update_coord.js")
 async def update_coordinates(coords: Input):
@@ -106,12 +109,15 @@ async def delete_folders():
 
 
 @app.post("/update_coordinates")
-async def update_coordinates(input: list):
+async def update_coordinates(input_data: UpdateCoordinatesInput):
     with open(REGION_FILE, "r") as file:
         data = json.load(file)
-    data["coordinates"] = [input]
+
+        data["coordinates"] = [input_data.coordinates]
+   
     with open(REGION_FILE, "w") as file:
         json.dump(data, file)
+    
     return {"status": "success"}
 
 # Mount the different directories for static files
@@ -219,7 +225,7 @@ async def send_zip_file(request: Request):
 
     # Send the email with the zip file as an attachment
     message = Mail(
-        from_email="KartAi-no-reply@hotmail.com",
+        from_email="victbakk@gmail.com",
         to_emails=email["email"],
         subject="Training data",
         html_content=f"<strong>The ordered training data is attached</strong>"
